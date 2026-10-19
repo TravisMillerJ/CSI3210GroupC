@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Home — CSI3210 PostHog Lab</title>
+  <link rel="stylesheet" href="css/bookstore.css">
+</head>
+<body data-page="home">
+  <main>
+    <div id="step-bar"></div>
+
+    <h1>Welcome to ShopUX</h1>
+    <h2>The best UX design books — curated for CSI 3210</h2>
+
+    <div class="card">
+      <p style="margin-bottom:1rem;">
+        This is a <strong>mock e-commerce store</strong> built for your PostHog lab.
+        Every page you visit fires a PostHog event. Your goal is to navigate through
+        the full checkout funnel and then explore the data in your PostHog dashboard.
+      </p>
+      <p style="margin-bottom:1.2rem; font-size:0.88rem; color:#475569;">
+        PostHog event fired on this page: <span class="badge">page_view {page: 'home'}</span>
+      </p>
+      <a href="products.html" class="btn btn-primary">Browse Books →</a>
+    </div>
+
+    <div class="card" style="background:#fefce8; border-color:#fde68a;">
+      <p style="font-size:0.85rem; color:#92400e;">
+        <strong>Lab tip:</strong> Keep your PostHog dashboard open in another tab
+        (Activity → Live Events) as you navigate — watch events appear in real time.
+      </p>
+    </div>
+  </main>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
