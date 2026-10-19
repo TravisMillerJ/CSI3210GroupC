@@ -12,28 +12,30 @@
   <h1>Your Cart</h1>
   <h2>Review your item before checking out</h2>
 
-  <p style="font-size:0.82rem; color:#475569; margin-bottom:1.2rem;">
+  <p class="event-note">
     PostHog event fired:
     <span class="badge">added_to_cart {product: '{{ product.title }}', price: {{ product.price }}}</span>
   </p>
 
-  <div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <div>
-        <p style="font-weight:700;">{{ product.title }}</p>
-        <p style="color:#64748b; font-size:0.88rem;">{{ product.author }}</p>
-      </div>
-      <p style="font-weight:700; font-size:1.1rem;">${{ '%.2f' % product.price }}</p>
+  <div class="card row">
+    <div>
+      <p class="product-cat">{{ product.icon }} {{ product.category }}</p>
+      <p class="product-name">{{ product.title }}</p>
+      <p class="muted">{{ product.brand }}</p>
+    </div>
+    <div style="text-align:right;">
+      {% if product.was %}<span class="was">${{ '%.2f' % product.was }}</span>{% endif %}
+      <span class="price">${{ '%.2f' % product.price }}</span>
     </div>
   </div>
 
-  <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+  <div class="card row">
     <p style="font-weight:700;">Total</p>
-    <p style="font-weight:700; font-size:1.2rem;">${{ '%.2f' % product.price }}</p>
+    <p class="price">${{ '%.2f' % product.price }}</p>
   </div>
 
-  <div style="display:flex; gap:1rem; margin-top:1rem;">
-    <a href="/products" class="btn btn-secondary">← Back</a>
+  <div class="actions">
+    <a href="/products" class="btn btn-secondary">← Keep Shopping</a>
     <a href="/checkout" class="btn btn-primary">Proceed to Checkout →</a>
   </div>
 {% endblock %}

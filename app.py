@@ -1,10 +1,10 @@
 """
-CA — PostHog UX Analytics Lab
-CSI 3210 · Oakland University
+GamersGear — CSI 3210 Group C Final Project
+Oakland University · Fall 2026
 
-Scenario: ShopUX — a three-step UX-book e-commerce checkout funnel.
-Students navigate through the app while PostHog records every event,
-then explore the data in the PostHog dashboard.
+Built on the HW01 ShopUX starter. A mock PC parts & peripherals store
+for student gamers. Every page fires a PostHog event via the Python SDK.
+Prices are mock values for demo purposes.
 
 Run:
     conda activate csi3210
@@ -26,10 +26,31 @@ ph = Posthog(project_api_key=POSTHOG_API_KEY, host=POSTHOG_HOST, sync_mode=True)
 app = Flask(__name__)
 app.secret_key = 'csi3210-posthog-lab'
 
+# Bias fields used by templates/products.html:
+#   sold  -> social proof badge ("Bestseller · N OU students bought this")
+#   was   -> anchoring (crossed-out original price)
+#   stock -> scarcity ("Only N left in stock")
 PRODUCTS = [
-    {'id': 'p1', 'title': "Don't Make Me Think",           'author': 'Steve Krug',      'price': 29.99},
-    {'id': 'p2', 'title': 'The Design of Everyday Things', 'author': 'Don Norman',      'price': 24.99},
-    {'id': 'p3', 'title': 'Lean UX',                       'author': 'Gothelf & Seiden','price': 34.99},
+    {'id': 'p1', 'title': 'G305 Wireless Gaming Mouse',   'brand': 'Logitech G', 'category': 'Peripheral', 'icon': '🖱️',
+     'price': 39.99,  'was': None,   'stock': 24, 'sold': 48},
+    {'id': 'p2', 'title': 'Ryzen 5 7600 Processor',       'brand': 'AMD',        'category': 'Component',  'icon': '🧠',
+     'price': 189.99, 'was': 229.99, 'stock': 15, 'sold': 0},
+    {'id': 'p3', 'title': '32GB DDR5-6000 RAM Kit',       'brand': 'Crucial',    'category': 'Component',  'icon': '💾',
+     'price': 89.99,  'was': None,   'stock': 3,  'sold': 0},
+    {'id': 'p4', 'title': 'K552 Mechanical Keyboard',     'brand': 'Redragon',   'category': 'Peripheral', 'icon': '⌨️',
+     'price': 34.99,  'was': None,   'stock': 30, 'sold': 0},
+    {'id': 'p5', 'title': '990 EVO 1TB NVMe SSD',         'brand': 'Samsung',    'category': 'Component',  'icon': '⚡',
+     'price': 79.99,  'was': 99.99,  'stock': 12, 'sold': 0},
+    {'id': 'p6', 'title': 'Cloud III Gaming Headset',     'brand': 'HyperX',     'category': 'Peripheral', 'icon': '🎧',
+     'price': 69.99,  'was': None,   'stock': 2,  'sold': 31},
+    {'id': 'p7', 'title': 'GeForce RTX 4060 8GB GPU',     'brand': 'NVIDIA',     'category': 'Component',  'icon': '🎮',
+     'price': 299.99, 'was': 329.99, 'stock': 4,  'sold': 57},
+    {'id': 'p8', 'title': 'B650 Gaming WiFi Motherboard', 'brand': 'MSI',        'category': 'Component',  'icon': '🔌',
+     'price': 159.99, 'was': None,   'stock': 18, 'sold': 0},
+    {'id': 'p9', 'title': 'RM750e 750W Power Supply',     'brand': 'Corsair',    'category': 'Component',  'icon': '🔋',
+     'price': 99.99,  'was': None,   'stock': 20, 'sold': 0},
+    {'id': 'p10', 'title': '4000D Airflow Mid-Tower Case', 'brand': 'Corsair',   'category': 'Component',  'icon': '🖥️',
+     'price': 94.99,  'was': 104.99, 'stock': 9,  'sold': 0},
 ]
 
 def get_uid():
@@ -46,7 +67,7 @@ def home():
     uid = get_uid()
     ph.capture(distinct_id=uid, event='page_view', properties={
         'page':  'home',
-        'title': 'ShopUX — UX Design Books',
+        'title': 'GamersGear — PC Parts & Peripherals',
     })
     return render_template('home.html', uid=uid)
 
@@ -56,7 +77,7 @@ def products():
     uid = get_uid()
     ph.capture(distinct_id=uid, event='page_view', properties={'page': 'products'})
     ph.capture(distinct_id=uid, event='viewed_product_list', properties={
-        'category': 'UX Books',
+        'category': 'PC Parts',
         'count':    len(PRODUCTS),
     })
     return render_template('products.html', uid=uid, products=PRODUCTS)

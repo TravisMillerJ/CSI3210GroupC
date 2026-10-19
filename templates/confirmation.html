@@ -9,35 +9,23 @@
     <span class="done">⑤ Confirmed</span>
   </div>
 
-  <div class="card" style="text-align:center; padding:2rem; border-color:#bbf7d0;">
-    <p style="font-size:2rem; margin-bottom:0.5rem;">✓</p>
-    <h1 style="color:#16a34a; margin-bottom:0.3rem;">Order Confirmed!</h1>
-    <p style="color:#64748b; margin-bottom:0.5rem;">Order ID: <strong>{{ order_id }}</strong></p>
-    <p style="font-size:0.88rem; color:#475569;">{{ product.title }}</p>
+  <div class="card card-success">
+    <p style="font-size:2.4rem; margin-bottom:0.5rem;">✓</p>
+    <h1 style="color:var(--cta);">Order Confirmed!</h1>
+    <p class="muted" style="margin-bottom:0.4rem;">Order ID: <strong style="color:var(--text);">{{ order_id }}</strong></p>
+    <p>{{ product.icon }} {{ product.title }} · ${{ '%.2f' % product.price }}</p>
   </div>
 
-  <div class="card" style="background:#eff6ff; border-color:#bfdbfe;">
+  <div class="card card-info">
     <p style="font-weight:700; margin-bottom:0.5rem;">PostHog event fired:</p>
-    <p style="font-size:0.85rem; color:#1e40af;">
+    <p>
       <span class="badge">completed_purchase</span>
-      <code style="font-size:0.82rem; color:#1e293b;">
-        {order_id: '{{ order_id }}', revenue: {{ product.price }}}
-      </code>
+      <code>{order_id: '{{ order_id }}', revenue: {{ product.price }}}</code>
     </p>
   </div>
 
-  <div class="card" style="background:#fefce8; border-color:#fde68a;">
-    <p style="font-weight:700; margin-bottom:0.5rem;">🎯 Next Steps for the Lab</p>
-    <ol style="padding-left:1.2rem; font-size:0.88rem; line-height:2;">
-      <li>Go to your PostHog dashboard → <strong>Activity → Live Events</strong> and take a screenshot.</li>
-      <li>Go to <strong>People</strong> and find your identified user — screenshot your profile.</li>
-      <li>Go to <strong>Insights → New → Funnel</strong> and build the checkout funnel (Activity 3).</li>
-      <li>Click <a href="/reset">↺ Reset session</a> and run through the funnel 2 more times to generate more data.</li>
-    </ol>
-  </div>
-
-  <div style="display:flex; gap:1rem; margin-top:1rem;">
+  <div class="actions">
     <a href="/reset" class="btn btn-secondary">↺ Run again (new session)</a>
-    <a href="/products" class="btn btn-primary">Browse more books</a>
+    <a href="/products" class="btn btn-primary">Keep Shopping</a>
   </div>
 {% endblock %}

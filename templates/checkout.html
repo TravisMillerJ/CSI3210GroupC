@@ -10,42 +10,30 @@
   </div>
 
   <h1>Checkout</h1>
-  <h2>Activity 2 — Identify yourself so PostHog can build your profile</h2>
-
-  <div class="card" style="background:#eff6ff; border-color:#bfdbfe; margin-bottom:1.2rem;">
-    <p style="font-size:0.85rem; color:#1e40af;">
-      <strong>What happens here:</strong> Submitting this form calls
-      <code>posthog.identify()</code> — linking your anonymous session UUID
-      to your name and email. After this, PostHog will show you as a
-      <em>named person</em> in the People section of the dashboard.
-    </p>
-  </div>
+  <h2>Enter your details to place your order</h2>
 
   <form method="POST" action="/checkout">
     <div class="card">
-      <div style="margin-bottom:1rem;">
-        <label for="name" style="display:block; font-weight:600; margin-bottom:0.3rem;">Full name</label>
-        <input type="text" id="name" name="name" value="{{ default_name }}"
-               required
-               style="width:100%; padding:0.6rem 0.8rem; border:1px solid #cbd5e1;
-                      border-radius:6px; font-size:0.95rem; min-height:44px;">
+      <div class="field">
+        <label for="name">Full name</label>
+        <input type="text" id="name" name="name" value="{{ default_name }}" required>
       </div>
-      <div style="margin-bottom:1.2rem;">
-        <label for="email" style="display:block; font-weight:600; margin-bottom:0.3rem;">Oakland email</label>
-        <input type="email" id="email" name="email" value="{{ default_email }}"
-               required
-               style="width:100%; padding:0.6rem 0.8rem; border:1px solid #cbd5e1;
-                      border-radius:6px; font-size:0.95rem; min-height:44px;">
+      <div class="field">
+        <label for="email">Oakland email</label>
+        <input type="email" id="email" name="email" value="{{ default_email }}" required>
       </div>
 
-      <div style="background:#f1f5f9; border-radius:6px; padding:0.8rem 1rem; margin-bottom:1.2rem;">
+      <div class="summary">
         <p style="font-size:0.85rem; font-weight:600; margin-bottom:0.2rem;">Order summary</p>
-        <p style="font-size:0.88rem; color:#475569;">{{ product.title }} — ${{ '%.2f' % product.price }}</p>
+        <p class="muted" style="font-size:0.9rem;">{{ product.icon }} {{ product.title }} — ${{ '%.2f' % product.price }}</p>
       </div>
 
-      <button type="submit" class="btn btn-primary" style="width:100%;">
-        Place Order &amp; Identify Me in PostHog →
-      </button>
+      <button type="submit" class="btn btn-primary btn-block">Place Order →</button>
     </div>
   </form>
+
+  <p class="event-note">
+    Submitting fires <span class="badge">$identify</span> (links this session to your name and email)
+    and <span class="badge">started_checkout</span>.
+  </p>
 {% endblock %}

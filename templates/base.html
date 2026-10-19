@@ -3,21 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}ShopUX{% endblock %} — CSI3210 PostHog Lab</title>
+  <title>{% block title %}GamersGear{% endblock %} — GamersGear</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/bookstore.css') }}">
 </head>
 <body>
   <header>
-    <a href="/" style="color:#f8fafc; font-weight:700; font-size:1.1rem;">📚 ShopUX</a>
+    <a href="/" class="logo">🎮 Gamers<span>Gear</span></a>
     <nav>
       <a href="/">Home</a>
-      <a href="/products">Books</a>
+      <a href="/products">Shop</a>
       <a href="/reset">↺ Reset session</a>
     </nav>
   </header>
   <main>
     {% block content %}{% endblock %}
   </main>
-  <footer>CSI 3210 — PostHog Lab · User ID: {{ uid }}</footer>
+  <footer>GamersGear · CSI 3210 Group C · Fall 2026 · Session ID: {{ uid }}</footer>
 </body>
 </html>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Browse Books{% endblock %}
+{% block title %}Shop{% endblock %}
 {% block content %}
   <div class="step-bar">
     <span class="done">① Home</span>
@@ -9,25 +9,48 @@
     <span>⑤ Confirmed</span>
   </div>
 
-  <h1>UX Design Books</h1>
-  <h2>Pick a title to add to your cart</h2>
+  <h1>PC Parts &amp; Peripherals</h1>
+  <h2>Pick an item to add to your cart</h2>
 
-  <p style="font-size:0.82rem; color:#475569; margin-bottom:1.2rem;">
+  <p class="event-note">
     PostHog events fired:
     <span class="badge">page_view {page: 'products'}</span>
-    <span class="badge">viewed_product_list {count: 3}</span>
+    <span class="badge">viewed_product_list {count: {{ products|length }}}</span>
   </p>
 
+  <div class="grid">
   {% for p in products %}
-  <div class="card" style="display:flex; justify-content:space-between; align-items:center; gap:1rem;">
-    <div>
-      <p style="font-weight:700; font-size:1.05rem;">{{ p.title }}</p>
-      <p style="color:#64748b; font-size:0.88rem;">{{ p.author }}</p>
+    <div class="card product">
+      <div class="product-icon">{{ p.icon }}</div>
+
+      {# Social proof bias #}
+      {% if p.sold %}
+        <span class="bias bias-social">★ Bestseller · {{ p.sold }} OU students bought this</span>
+      {% endif %}
+
+      {# Scarcity bias #}
+      {% if p.stock <= 5 %}
+        <span class="bias bias-scarcity">🔥 Only {{ p.stock }} left in stock</span>
+      {% endif %}
+
+      <p class="product-cat">{{ p.category }}</p>
+      <p class="product-name">{{ p.title }}</p>
+      <p class="product-brand">{{ p.brand }}</p>
+
+      <div class="product-foot">
+        <div>
+          {# Anchoring bias #}
+          {% if p.was %}
+            <span class="was">${{ '%.2f' % p.was }}</span>
+          {% endif %}
+          <span class="price">${{ '%.2f' % p.price }}</span>
+          {% if p.was %}
+            <span class="save">You save ${{ '%.2f' % (p.was - p.price) }}</span>
+          {% endif %}
+        </div>
+        <a href="/cart?id={{ p.id }}" class="btn btn-primary">Add to Cart</a>
+      </div>
     </div>
-    <div style="text-align:right; flex-shrink:0;">
-      <p style="font-weight:700; font-size:1.1rem; margin-bottom:0.5rem;">${{ '%.2f' % p.price }}</p>
-      <a href="/cart?id={{ p.id }}" class="btn btn-primary">Add to Cart</a>
-    </div>
-  </div>
   {% endfor %}
+  </div>
 {% endblock %}
