@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How Flask, Jinja2 & PostHog Work Together</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body    { font-family: system-ui, sans-serif; background: #f8fafc; color: #1e293b;
+              line-height: 1.7; max-width: 860px; margin: 2.5rem auto; padding: 0 1.5rem; }
+    h1      { font-size: 1.8rem; margin-bottom: 0.4rem; }
+    h2      { font-size: 1.25rem; margin: 2rem 0 0.6rem; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.3rem; }
+    h3      { font-size: 1rem; margin: 1.2rem 0 0.3rem; color: #475569; }
+    p       { margin-bottom: 0.9rem; }
+    ul, ol  { padding-left: 1.4rem; margin-bottom: 0.9rem; }
+    li      { margin-bottom: 0.4rem; }
+    code    { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 4px;
+              padding: 0.1rem 0.4rem; font-size: 0.88em; color: #0f172a; }
+    pre     { background: #1e293b; color: #e2e8f0; border-radius: 8px;
+              padding: 1.2rem 1.4rem; overflow-x: auto; margin: 0.8rem 0 1.2rem;
+              font-size: 0.85rem; line-height: 1.6; }
+    pre code { background: none; border: none; padding: 0; color: inherit; font-size: inherit; }
+    .callout { border-left: 4px solid #2563eb; background: #eff6ff; border-radius: 0 6px 6px 0;
+               padding: 0.9rem 1.2rem; margin: 1rem 0; }
+    .callout.green { border-color: #16a34a; background: #f0fdf4; }
+    .callout.amber { border-color: #d97706; background: #fffbeb; }
+    .tag    { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px;
+              font-size: 0.78rem; font-weight: 700; margin-right: 0.3rem; }
+    .tag-jinja  { background: #fde68a; color: #92400e; }
+    .tag-python { background: #dbeafe; color: #1e40af; }
+    .tag-post   { background: #d1fae5; color: #065f46; }
+    .flow   { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+              background: #f1f5f9; border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0; font-size: 0.9rem; }
+    .flow-box { background: #fff; border: 1px solid #cbd5e1; border-radius: 6px;
+                padding: 0.4rem 0.8rem; font-weight: 600; white-space: nowrap; }
+    .arrow  { color: #94a3b8; font-size: 1.1rem; }
+    footer  { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;
+              font-size: 0.78rem; color: #94a3b8; }
+  </style>
+</head>
+<body>
+
+  <h1>How Flask, Jinja2 &amp; PostHog Work Together</h1>
+  <p style="color:#64748b; margin-bottom:1.5rem;">A reference for CSI 3210 — PostHog UX Analytics Lab</p>
+
+  <!-- ── SECTION 1 ── -->
+  <h2>1. The Two Syntaxes You See in Templates</h2>
+  <p>Flask uses the <strong>Jinja2</strong> templating engine to combine Python data with HTML. There are three notations:</p>
+
+  <h3><span class="tag tag-jinja">{{ }}</span> Output a value</h3>
+  <p>Renders a Python variable as text inside the HTML.</p>
+  <pre><code>&lt;p&gt;Welcome, {{ name }}&lt;/p&gt;
+&lt;!-- Flask replaces {{ name }} with the actual string, e.g. "Jane Doe" --&gt;</code></pre>
+
+  <h3><span class="tag tag-jinja">{% %}</span> Execute logic</h3>
+  <p>Runs control flow — loops, conditionals, template inheritance. Nothing is rendered; it just controls structure.</p>
+  <pre><code>{% for product in products %}
+  &lt;p&gt;{{ product.title }} — ${{ product.price }}&lt;/p&gt;
+{% endfor %}
+
+{% if user_logged_in %}
+  &lt;p&gt;Hello, {{ user.name }}&lt;/p&gt;
+{% endif %}
+
+{% extends "base.html" %}   &lt;!-- inherit the shared layout --&gt;
+{% block content %}         &lt;!-- fill in the content slot --&gt;
+  ...
+{% endblock %}</code></pre>
+
+  <h3><span class="tag tag-jinja">{# #}</span> Comment</h3>
+  <p>Ignored by Jinja2 — never sent to the browser.</p>
+  <pre><code>{# This is a Jinja2 comment — it won't appear in the page source #}</code></pre>
+
+  <div class="callout">
+    <strong>Key point:</strong> Jinja2 runs <em>on the server</em> before the HTML is sent to the browser.
+    By the time the page reaches the user's browser, all <code>{{ }}</code> and <code>{% %}</code>
+    tags have already been replaced with plain HTML. The browser never sees them.
+  </div>
+
+  <!-- ── SECTION 2 ── -->
+  <h2>2. How a Flask Route Triggers a PostHog Event</h2>
+
+  <div class="flow">
+    <div class="flow-box">Browser request</div>
+    <span class="arrow">→</span>
+    <div class="flow-box">Flask route (app.py)</div>
+    <span class="arrow">→</span>
+    <div class="flow-box">ph.capture()</div>
+    <span class="arrow">→</span>
+    <div class="flow-box">PostHog SDK</div>
+    <span class="arrow">→</span>
+    <div class="flow-box">HTTPS POST to us.i.posthog.com</div>
+    <span class="arrow">→</span>
+    <div class="flow-box">PostHog dashboard</div>
+  </div>
+
+  <p>Every time a user visits a page, the matching Python function in <code>app.py</code> runs. Before returning the HTML, that function calls <code>ph.capture()</code>:</p>
+
+  <pre><code><span style="color:#94a3b8"># app.py — the /products route</span>
+@app.route('/products')
+def products():
+    uid = get_uid()                         <span style="color:#94a3b8"># anonymous session ID</span>
+
+    ph.capture(
+        distinct_id = uid,                  <span style="color:#94a3b8"># WHO fired the event</span>
+        event       = 'viewed_product_list',<span style="color:#94a3b8"># WHAT happened</span>
+        properties  = {                     <span style="color:#94a3b8"># extra context</span>
+            'category': 'UX Books',
+            'count':    3,   <span style="color:#94a3b8"># hardcoded — reflects len(PRODUCTS) in app.py; would increase if more books were added</span>
+        }
+    )
+
+    return render_template('products.html', uid=uid, products=PRODUCTS)</code></pre>
+
+  <p>The <code>render_template()</code> call is completely separate — it only builds the HTML for the browser.
+  PostHog never touches the template; it only receives what <code>ph.capture()</code> sends.</p>
+
+  <!-- ── SECTION 3 ── -->
+  <h2>3. Event Naming — How Does PostHog Know Your Names?</h2>
+
+  <p>There is <strong>no pre-registration</strong>. PostHog learns your event names the first time it receives them.</p>
+
+  <p>When <code>ph.capture(event='viewed_product_list', ...)</code> runs for the first time, PostHog:</p>
+  <ol>
+    <li>Receives the HTTPS POST from the SDK.</li>
+    <li>Stores the event string <code>"viewed_product_list"</code> in your project.</li>
+    <li>Indexes all properties (<code>category</code>, <code>count</code>) automatically.</li>
+    <li>Makes the event available immediately in Live Events, Insights, and Funnels.</li>
+  </ol>
+
+  <div class="callout green">
+    <strong>You invented the names.</strong> <code>'viewed_product_list'</code>, <code>'added_to_cart'</code>,
+    <code>'completed_purchase'</code> — these are arbitrary strings defined in <code>app.py</code>.
+    PostHog has no schema; it accepts any event name and any properties you send.
+  </div>
+
+  <h3>Naming convention used in this lab</h3>
+  <p>Event names follow the <strong>snake_case verb + noun</strong> pattern — the same convention used by most analytics teams:</p>
+
+  <pre><code>page_view             <span style="color:#94a3b8"># generic page visit</span>
+viewed_product_list   <span style="color:#94a3b8"># browsed the product catalogue</span>
+added_to_cart         <span style="color:#94a3b8"># picked a book</span>
+started_checkout      <span style="color:#94a3b8"># reached the checkout form</span>
+completed_purchase    <span style="color:#94a3b8"># order confirmed</span>
+$identify             <span style="color:#94a3b8"># PostHog reserved event — links UUID to a real person</span></code></pre>
+
+  <div class="callout amber">
+    <strong>Reserved names:</strong> PostHog reserves events that start with <code>$</code>
+    (e.g. <code>$identify</code>, <code>$pageview</code>, <code>$set</code>).
+    These trigger special behavior inside PostHog — do not use <code>$</code> prefixes for your own events.
+  </div>
+
+  <!-- ── SECTION 4 ── -->
+  <h2>4. How <code>$identify</code> Links a UUID to a Real Person</h2>
+
+  <p>Before checkout, every event is tied to an anonymous UUID like <code>a3f9c2d1-...</code>.
+  At checkout, the user submits their name and email. The app then fires a special event:</p>
+
+  <pre><code>ph.capture(
+    distinct_id = uid,          <span style="color:#94a3b8"># same UUID used all session</span>
+    event       = '$identify',  <span style="color:#94a3b8"># PostHog reserved — triggers identity merge</span>
+    properties  = {
+        '$set': {               <span style="color:#94a3b8"># $set writes values to the Person profile</span>
+            'name':   'Jane Doe',
+            'email':  'jdoe@oakland.edu',
+            'course': 'CSI3210',
+        }
+    }
+)</code></pre>
+
+  <p>PostHog merges the UUID session with the named person profile.
+  All events fired <em>before</em> the identification — <code>page_view</code>, <code>added_to_cart</code>, etc. —
+  are retroactively attributed to that person in the People dashboard.</p>
+
+  <!-- ── SECTION 5 ── -->
+  <h2>5. Properties — What Gets Indexed</h2>
+
+  <p>Every key you include in <code>properties={}</code> becomes a filterable field in PostHog:</p>
+
+  <pre><code>ph.capture(
+    distinct_id = uid,
+    event       = 'added_to_cart',
+    properties  = {
+        'product_id':   'p2',
+        'product_name': 'The Design of Everyday Things',
+        'price':        24.99,
+    }
+)</code></pre>
+
+  <p>In PostHog you can then:</p>
+  <ul>
+    <li>Filter funnels by <code>price &gt; 30</code></li>
+    <li>Group insights by <code>product_name</code></li>
+    <li>Build cohorts of users who added a specific <code>product_id</code></li>
+  </ul>
+
+  <div class="callout">
+    <strong>No schema required.</strong> PostHog discovers new property keys automatically on first receipt.
+    The only cost of sending many properties is storage — keep them meaningful.
+  </div>
+
+  <!-- ── SECTION 6 ── -->
+  <h2>6. sync_mode=True — Why It Matters in a Lab</h2>
+
+  <p>In production, the PostHog SDK batches events and sends them in the background to avoid slowing down your app.
+  In this lab we set:</p>
+
+  <pre><code>ph = Posthog(project_api_key=POSTHOG_API_KEY, host=POSTHOG_HOST, sync_mode=True)</code></pre>
+
+  <p><code>sync_mode=True</code> forces every <code>ph.capture()</code> call to send immediately and wait for the
+  response before continuing. This means events appear in Live Events the moment you visit a page —
+  essential for the lab so users can watch events stream in real time.</p>
+
+  <!-- ── SECTION 7 ── -->
+  <h2>7. First Event — Route &amp; Template Side by Side</h2>
+
+  <p>The first <code>ph.capture()</code> fires the moment a user opens <strong>http://127.0.0.1:5000/</strong>.
+  Here is what runs on the server (<code>app.py</code>) and what the user sees in the browser (<code>home.html</code>):</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1rem 0;">
+
+    <div>
+      <p style="font-size:0.82rem; font-weight:700; color:#475569; margin-bottom:0.4rem;">
+        <span class="tag tag-python">app.py</span> — Flask route
+      </p>
+      <pre style="margin:0; height:100%;"><code>@app.route('/')
+def home():
+    uid = get_uid()
+    <span style="color:#86efac"># ← first capture of the session</span>
+    ph.capture(
+        distinct_id = uid,
+        event       = 'page_view',
+        properties  = {
+            'page':  'home',
+            'title': 'ShopUX — UX Design Books',
+        }
+    )
+    return render_template(
+        'home.html',
+        uid=uid      <span style="color:#94a3b8"># passed to template</span>
+    )</code></pre>
+    </div>
+
+    <div>
+      <p style="font-size:0.82rem; font-weight:700; color:#475569; margin-bottom:0.4rem;">
+        <span class="tag tag-jinja">home.html</span> — Jinja2 template
+      </p>
+      <pre style="margin:0; height:100%;"><code>{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+
+&lt;h1&gt;Welcome to ShopUX&lt;/h1&gt;
+
+&lt;div class="card"&gt;
+  &lt;p&gt;PostHog event fired:
+    &lt;span class="badge"&gt;
+      page_view {page: 'home'}
+    &lt;/span&gt;
+  &lt;/p&gt;
+  &lt;a href="/products"
+     class="btn btn-primary"&gt;
+    Browse Books →
+  &lt;/a&gt;
+&lt;/div&gt;
+
+{% endblock %}</code></pre>
+    </div>
+
+  </div>
+
+  <div class="callout">
+    <strong>What to notice:</strong> <code>ph.capture()</code> runs <em>before</em> <code>render_template()</code>.
+    The event reaches PostHog while Flask is still assembling the HTML — the browser and PostHog receive their
+    responses independently. The template has no knowledge of PostHog; it only displays a badge to inform the user
+    which event was fired.
+  </div>
+
+  <footer>CSI 3210 — User Experience Design · Oakland University</footer>
+
+</body>
+</html>

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Cart{% endblock %}
+{% block content %}
+  <div class="step-bar">
+    <span class="done">① Home</span>
+    <span class="done">② Browse</span>
+    <span class="active">③ Cart</span>
+    <span>④ Checkout</span>
+    <span>⑤ Confirmed</span>
+  </div>
+
+  <h1>Your Cart</h1>
+  <h2>Review your item before checking out</h2>
+
+  <p style="font-size:0.82rem; color:#475569; margin-bottom:1.2rem;">
+    PostHog event fired:
+    <span class="badge">added_to_cart {product: '{{ product.title }}', price: {{ product.price }}}</span>
+  </p>
+
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <p style="font-weight:700;">{{ product.title }}</p>
+        <p style="color:#64748b; font-size:0.88rem;">{{ product.author }}</p>
+      </div>
+      <p style="font-weight:700; font-size:1.1rem;">${{ '%.2f' % product.price }}</p>
+    </div>
+  </div>
+
+  <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+    <p style="font-weight:700;">Total</p>
+    <p style="font-weight:700; font-size:1.2rem;">${{ '%.2f' % product.price }}</p>
+  </div>
+
+  <div style="display:flex; gap:1rem; margin-top:1rem;">
+    <a href="/products" class="btn btn-secondary">← Back</a>
+    <a href="/checkout" class="btn btn-primary">Proceed to Checkout →</a>
+  </div>
+{% endblock %}
